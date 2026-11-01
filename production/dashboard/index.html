@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14251f">
+<title>Prajan's Time Travel — Production Dashboard</title>
+<style>
+:root{--ink:#17231e;--muted:#68756e;--paper:#f5f3eb;--card:#fffefa;--green:#244b3c;--lime:#d8e8a9;--line:#e6e4da;--gold:#d7a94c}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--ink);color:white;padding:28px max(22px,calc((100% - 1120px)/2));}
+.eyebrow{color:var(--lime);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.1;margin:8px 0}header p{color:#d4ded7;margin:8px 0 0;max-width:650px}
+main{max-width:1120px;margin:26px auto;padding:0 20px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+button,.button{border:0;border-radius:10px;padding:10px 14px;background:var(--green);color:white;font-weight:650;cursor:pointer;font:inherit}
+button.secondary{background:white;color:var(--green);border:1px solid var(--line)}button.danger{background:#8b3e32}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.stat,.panel,.episode{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px}
+.stat strong{display:block;font-size:26px}.stat span{color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns:1fr 1.25fr;gap:18px}.panel h2{font-size:18px;margin:0 0 14px}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 5px}input,select,textarea{width:100%;padding:10px 11px;border:1px solid #d8dbd2;border-radius:9px;background:white;color:var(--ink);font:inherit}textarea{min-height:72px;resize:vertical}
+.fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.episode{margin-bottom:12px}.episode-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.episode h3{margin:0;font-size:17px}.episode small{color:var(--muted)}
+.badge{font-size:12px;border-radius:99px;padding:4px 9px;background:#edf1e7;color:#34533f;white-space:nowrap}.progress{height:7px;background:#ecece5;border-radius:9px;overflow:hidden;margin:12px 0}.progress i{display:block;height:100%;background:#6f9a69}
+.task{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.task:last-child{border:0}.task input{width:auto;margin-top:5px}.task span{flex:1}.task select{width:auto;min-width:130px;padding:6px}
+.scene{display:grid;grid-template-columns:1fr 145px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.scene:last-child{border:0}
+.note{color:var(--muted);font-size:13px}.empty{color:var(--muted);padding:18px 0}
+footer{max-width:1120px;margin:22px auto 40px;padding:0 20px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:12px}.stat strong{font-size:21px}.scene{grid-template-columns:1fr 120px}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">A small studio for big discoveries</div><h1>Prajan's Time Travel</h1><p>Production dashboard · Plan episodes, track scenes and keep each story moving from research to release.</p></header>
+<main>
+<div class="toolbar"><button id="newEpisode">＋ New episode</button><button class="secondary" id="exportData">Export backup</button><label class="button secondary" for="importFile">Import backup</label><input id="importFile" type="file" accept="application/json" hidden></div>
+<section class="stats"><div class="stat"><strong id="totalCount">0</strong><span>Episodes</span></div><div class="stat"><strong id="activeCount">0</strong><span>In progress</span></div><div class="stat"><strong id="doneCount">0</strong><span>Completed tasks</span></div></section>
+<div class="layout">
+<section class="panel"><h2>Episode library</h2><div id="episodeList"></div><p class="note">Select an episode to edit its production checklist and scene progress.</p></section>
+<section class="panel"><div id="editor"><div class="empty">Choose an episode to begin.</div></div></section>
+</div>
+</main>
+<footer>Privacy note: this starter dashboard saves data only in this browser using local storage. It has no login, server, analytics or cloud sync. Export a backup regularly. Do not store a child's private details, school, home address, routine or contact information here.</footer>
+<script>
+const KEY='prajan-production-dashboard-v1';
+const defaultData=[{id:'EP-001',title:'Kallanai — The Ancient Water Wonder',topic:'Ancient Tamil engineering',status:'In production',target:'3–4 minutes',language:'English master; Tamil adaptation planned',notes:'Explain Kallanai as a water-diversion structure on the Kaveri, traditionally associated with Karikala Chola. Clearly label imagined time-travel scenes as creative reconstruction.',tasks:[['Research facts and sources','Done'],['Finalise script','In progress'],['Prepare visual prompts','To do'],['Record narration','To do'],['Edit video and subtitles','To do'],['Adult review and fact-check','To do'],['Prepare thumbnail and description','To do'],['Publish and archive assets','To do']],scenes:[['01 · Present-day hook','A modern visit to Kallanai'],['02 · Time-travel transition','Prajan arrives at an imagined ancient riverbank'],['03 · Meet the engineer','An engineer explains how water is guided'],['04 · Water demonstration','Show the low barrier and irrigation channels'],['05 · Karikala Chola','An explicitly imagined historical encounter'],['06 · Return and takeaway','Summarise why the structure matters']].map(x=>({title:x[0],description:x[1],status:'To do'}))}];
+let data=load(), selected=data[0]?.id||null;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||defaultData}catch{return defaultData}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function counts(e){let all=e.tasks.length+e.scenes.length,done=e.tasks.filter(t=>t[1]==='Done').length+e.scenes.filter(s=>s.status==='Done').length;return {all,done,pct:all?Math.round(done/all*100):0}}
+function render(){document.getElementById('totalCount').textContent=data.length;document.getElementById('activeCount').textContent=data.filter(e=>e.status==='In production').length;document.getElementById('doneCount').textContent=data.reduce((n,e)=>n+e.tasks.filter(t=>t[1]==='Done').length+e.scenes.filter(s=>s.status==='Done').length,0);
+document.getElementById('episodeList').innerHTML=data.map(e=>{let c=counts(e);return `<article class="episode"><div class="episode-top"><div><h3>${esc(e.title)}</h3><small>${esc(e.id)} · ${esc(e.topic)}</small></div><span class="badge">${esc(e.status)}</span></div><div class="progress"><i style="width:${c.pct}%"></i></div><small>${c.pct}% complete · ${c.done}/${c.all} items</small><p><button class="secondary" onclick="selectEpisode('${e.id}')">Open episode</button></p></article>`}).join('')||'<div class="empty">No episodes yet. Create your first one.</div>';
+let e=data.find(x=>x.id===selected);if(!e){document.getElementById('editor').innerHTML='<div class="empty">Choose an episode to begin.</div>';return}
+document.getElementById('editor').innerHTML=`<h2>Episode workspace</h2>
+<div class="fieldrow"><div><label>Episode ID</label><input value="${esc(e.id)}" disabled></div><div><label>Production status</label><select id="status"><option>Planning</option><option>In production</option><option>Review</option><option>Ready to publish</option><option>Published</option><option>On hold</option></select></div></div>
+<label>Episode title</label><input id="title" value="${esc(e.title)}">
+<label>Topic / learning theme</label><input id="topic" value="${esc(e.topic)}">
+<div class="fieldrow"><div><label>Target duration</label><input id="target" value="${esc(e.target)}"></div><div><label>Language plan</label><input id="language" value="${esc(e.language)}"></div></div>
+<label>Research / production notes</label><textarea id="notes">${esc(e.notes)}</textarea>
+<h2 style="margin-top:22px">Production checklist</h2><div id="tasks"></div>
+<h2 style="margin-top:22px">Scene tracker</h2><div id="scenes"></div>
+<div class="toolbar" style="margin-top:18px"><button id="saveEpisode">Save changes</button><button class="secondary" id="addTask">＋ Add task</button><button class="secondary" id="addScene">＋ Add scene</button><button class="danger" id="deleteEpisode">Delete episode</button></div>`;
+document.getElementById('status').value=e.status;
+document.getElementById('tasks').innerHTML=e.tasks.map((t,i)=>`<div class="task"><input type="checkbox" ${t[1]==='Done'?'checked':''} data-task="${i}"><span>${esc(t[0])}</span><select data-taskstatus="${i}"><option>To do</option><option>In progress</option><option>Done</option><option>Blocked</option></select></div>`).join('');
+e.tasks.forEach((t,i)=>document.querySelector('[data-taskstatus="'+i+'"]').value=t[1]);
+document.getElementById('scenes').innerHTML=e.scenes.map((s,i)=>`<div class="scene"><div><strong>${esc(s.title)}</strong><div class="note">${esc(s.description)}</div></div><select data-scene="${i}"><option>To do</option><option>In progress</option><option>Done</option><option>Blocked</option></select></div>`).join('');
+e.scenes.forEach((s,i)=>document.querySelector('[data-scene="'+i+'"]').value=s.status);
+document.getElementById('saveEpisode').onclick=()=>{e.title=val('title');e.topic=val('topic');e.status=val('status');e.target=val('target');e.language=val('language');e.notes=val('notes');e.tasks=e.tasks.map((t,i)=>[t[0],document.querySelector('[data-taskstatus="'+i+'"]').value]);e.scenes=e.scenes.map((s,i)=>({...s,status:document.querySelector('[data-scene="'+i+'"]').value}));save()};
+document.getElementById('tasks').querySelectorAll('input[type=checkbox]').forEach((el,i)=>el.onchange=()=>{document.querySelector('[data-taskstatus="'+i+'"]').value=el.checked?'Done':'To do'});
+document.getElementById('addTask').onclick=()=>{e.tasks.push(['New production task','To do']);save()};
+document.getElementById('addScene').onclick=()=>{e.scenes.push({title:'New scene',description:'Add a short scene description',status:'To do'});save()};
+document.getElementById('deleteEpisode').onclick=()=>{if(confirm('Delete this episode from this browser? Export a backup first if needed.')){data=data.filter(x=>x.id!==e.id);selected=data[0]?.id||null;save()}};
+}
+function val(id){return document.getElementById(id).value}
+window.selectEpisode=id=>{selected=id;render()};
+document.getElementById('newEpisode').onclick=()=>{let n=data.length+1,id='EP-'+String(n).padStart(3,'0');while(data.some(e=>e.id===id)){n++;id='EP-'+String(n).padStart(3,'0')}data.push({id,title:'New episode',topic:'',status:'Planning',target:'3–4 minutes',language:'English master; Tamil adaptation planned',notes:'',tasks:[['Research facts and sources','To do'],['Finalise script','To do'],['Prepare visuals','To do'],['Record narration','To do'],['Edit and review','To do'],['Publish and archive','To do']],scenes:[]});selected=id;save()};
+document.getElementById('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='prajan-production-backup.json';a.click();URL.revokeObjectURL(a.href)};
+document.getElementById('importFile').onchange=async ev=>{let f=ev.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!Array.isArray(x)||!x.every(e=>e.id&&Array.isArray(e.tasks)&&Array.isArray(e.scenes)))throw Error();if(confirm('Replace the current browser dashboard with this backup?')){data=x;selected=data[0]?.id||null;save()}}catch{alert('That backup file could not be read.')}ev.target.value=''};
+render();
+</script>
+</body></html>
